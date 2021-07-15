@@ -1,0 +1,107 @@
+<style>
+  html,
+  body {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .root {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .container {
+    width: 80%;
+  }
+
+  .col {
+    width: 50%;
+  }
+  td {
+    border: 1px solid black;
+    text-align: center;
+  }
+</style>
+
+<div class="root">
+  <div class="container">
+    <div class="col">
+      <input id="f-usercache" type="file" data-name="usercache">usercache</input>
+      <pre id="usercache"></pre>
+    </div>
+    <div class="col">
+      <input id="f-linkedaccount" type="file" data-name="linkedaccount">linkedaccount</input>
+      <pre id="linkedaccount"></pre>
+    </div>
+  </div>
+  <div class="container">
+    <table style="width: 100%">
+      <thead>
+        <th>Minecraft</th>
+        <th>Discord</th>
+        <th>UUID</th>
+      </thead>
+      <tbody id="results">
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function convert(usercache, linkedaccount) {
+      let uTemp = Object.entries(usercache)
+      let lTemp = Object.entries(linkedaccount)
+
+      lTemp = Object.fromEntries(lTemp.map(([key, val]) => ([val, { discord: key }])))
+      uTemp = uTemp.map(([, val]) => ([val.uuid, { minecraft: val.name }]))
+
+      const table = document.querySelector('#results')
+      table.innerHTML = ""
+      uTemp.forEach(([uuid, { minecraft }]) => {
+        let discord = ''
+        let row = ''
+        if (uuid in lTemp) {
+          discord = lTemp[uuid].discord
+        }
+        row += "<tr>"
+        ;
+        ([minecraft, discord, uuid]).forEach((cel) => {
+          row += `<td><pre>${cel}</pre></td>`
+        })
+        row += "</tr>"
+        table.innerHTML += row
+      })
+      // const result = Object.fromEntries(uTemp.map(([key, val]) => ([key, {...val, ...lTemp[key]}])))
+      // document.querySelector('#results').innerText = JSON.stringify(result, null, 2)
+    }
+
+    function onChange(event) {
+      const source = event.target.dataset.name
+      var reader = new FileReader()
+      reader.onload = (event) => {
+        const domUsercache = document.querySelector('#usercache')
+        const domLinkedAccount = document.querySelector('#linkedaccount')
+
+        document.querySelector(`#${source}`).innerText = JSON.stringify(JSON.parse(event.target.result), null, 2)
+        if (domUsercache.innerText != "" && domLinkedAccount.innerText != "") {
+          convert(JSON.parse(domUsercache.innerText), JSON.parse(domLinkedAccount.innerText))
+        }
+      }
+      reader.readAsText(event.target.files[0])
+    }
+
+    document.querySelector('#f-usercache').addEventListener('change', onChange)
+    document.querySelector('#f-linkedaccount').addEventListener('change', onChange)
+
+  }());
+</script>
